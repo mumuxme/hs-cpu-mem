@@ -43,17 +43,18 @@ opts = info (helper <*> usage)
       ( fullDesc
      <> header "hs-cpu-mem - simple program that show your cpu && memory uasge" )
 
-showHelpText :: ParserPrefs -> ParserInfo a -> IO ()
-showHelpText pprefs pinfo = handleParseResult . Failure $
-  parserFailure pprefs pinfo ShowHelpText mempty
+showHelpText :: IO ()
+showHelpText = handleParseResult . Failure $
+  parserFailure pprefs opts ShowHelpText mempty
 
 main :: IO ()
 main = run =<< customExecParser pprefs opts
 
 run :: Opts -> IO ()
-run (Opts True delay numOfDecimals False) = putStr =<< cpuUsage delay numOfDecimals
-run (Opts False delay numOfDecimals True) = putStr =<< memUsage
-run (Opts True delay numOfDecimals True) = memUsage >>=
-  \m -> cpuUsage delay numOfDecimals >>=
-  \c -> putStr $ m ++ " " ++ c
-run _ = showHelpText pprefs opts
+run (Opts True d n False) = putStr =<< cpuUsage d n
+run (Opts False _ _ True) = putStr =<< memUsage
+run (Opts True d n True) = do
+  m <- memUsage
+  c <- cpuUsage d n
+  putStr $ m ++ " " ++ c
+run _ = showHelpText
